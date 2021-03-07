@@ -330,6 +330,8 @@ class _HeroState extends State<Hero> {
   // in its flight animation). See `startFlight`.
   bool _shouldIncludeChild = true;
 
+  bool _endedFlight = false;
+
   // The `shouldIncludeChildInPlaceholder` flag dictates if the child widget of
   // this hero should be included in the placeholder widget as a descendant.
   //
@@ -347,6 +349,7 @@ class _HeroState extends State<Hero> {
     final RenderBox box = context.findRenderObject()! as RenderBox;
     assert(box != null && box.hasSize);
     setState(() {
+      _endedFlight = false;
       _placeholderSize = box.size;
     });
   }
@@ -358,6 +361,9 @@ class _HeroState extends State<Hero> {
   // This method can be safely called even when this [Hero] is currently not in
   // a flight.
   void endFlight({ bool keepPlaceholder = false }) {
+    setState(() {
+      _endedFlight = true;
+    });
     if (keepPlaceholder || _placeholderSize == null)
       return;
 
@@ -393,7 +399,7 @@ class _HeroState extends State<Hero> {
       width: _placeholderSize?.width,
       height: _placeholderSize?.height,
       child: Offstage(
-        offstage: showPlaceholder,
+        offstage: showPlaceholder && !_endedFlight,
         child: TickerMode(
           enabled: !showPlaceholder,
           child: KeyedSubtree(key: _key, child: widget.child),
@@ -778,8 +784,8 @@ class HeroController extends NavigatorObserver {
     assert(route != null);
     // Don't trigger another flight when a pop is committed as a user gesture
     // back swipe is snapped.
-    if (!navigator!.userGestureInProgress)
-      _maybeStartHeroTransition(route, previousRoute, HeroFlightDirection.pop, false);
+    // if (!navigator!.userGestureInProgress)
+    //   _maybeStartHeroTransition(route, previousRoute, HeroFlightDirection.pop, false);
   }
 
   @override
